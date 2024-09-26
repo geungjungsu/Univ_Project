@@ -46,13 +46,6 @@
     + ln_age=log(age)) %>%
     + dplyr::select(-blast_furnace_slag,-superplasticizer,-age)
 
-```
-로그 변환 피드백
-: 로그변환의 목적은
-1. 
-```
-
-
 # 최종 산점도 행렬 확인
 > ggpairs(concrete_ln, lower=list(continuous="smooth"))
 
