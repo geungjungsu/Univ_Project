@@ -1,9 +1,18 @@
 # 피드백
 1. 자료 출처 명확하게 밝히기
-- Kaggle > Datasets
-- Url : https://www.kaggle.com/datasets/elikplim/concrete-compressive-strength-data-set
+- 이전
+        - 자료 출처 : Concrete Compressive Strength Data Set | Kaggle
+- 피드백 반영
+        - Kaggle > Datasets
+        - Url : https://www.kaggle.com/datasets/elikplim/concrete-compressive-strength-data-set
 
-2. 로그 변환 명확하게 해결하지 못했을 때 대체 방법 사용
+2. 로그 변환
+- 이전
+        ```
+        로그변환 후 분포들이 치우쳐져 있던 문제들이 다소 해결된 것으로 보이나 ln_Fly.Ash 변수는
+        로그변환을 하지 않은 분포가 좀 더 안정적으로 보이므로 로그변환을 하지 않은 변수로
+        사용할 것이다.
+        ```
 - 로그변환의 목적 
     - 비대칭 분포 교정 : 회귀분석 가정 만족
     - 변수 스케일 조정
@@ -11,26 +20,64 @@
     - 이상치 영향 감소
     - 해석의 용이성
 
-- 대체 방법
-    - 표준화
-    - 로그변환
-    - Box-Cox(박스콕스) 변환
-    - Yeo-Johnson(여존슨) 변환
-    - 역수
-    - 제곱근
-    - 변수 제거
+- 이후 : 그래프 형태가 올바르게 변한 것은 변수제거만 변했다. 하지만 섣부르게 데이터 삭제를 하기에는 위험이 있어보인다.
+        - 대체 방법
+            - Box-Cox(박스콕스) 변환
+                ```
+                > lambda <- BoxCox.lambda(concrete$fly_ash)
+                > concrete_boxcox <- concrete %>%
+                    +     mutate(boxcox_fly_ash = BoxCox(fly_ash, lambda))
+                ```
+            - Yeo-Johnson(여존슨) 변환 -> Error 발생 패키지에서 yeo.johnson 찾지 못함
+                ```
+                concrete_yeojohnson <- concrete %>%
+                    +     mutate(yeojohnson_fly_ash = MASS::yeo.johnson(fly_ash))
+                ```
+            - 역수
+                ```
+                concrete <- concrete %>%
+                    +     mutate(reciprocal_fly_ash = 1 / (fly_ash + 1))
+                ```
+            - 제곱근
+                ```
+                concrete <- concrete %>%
+                    +     mutate(sqrt_fly_ash = sqrt(fly_ash))
+                ```
+            - 변수 제거(IQR을 활용한 데이터 초기값 제거)
+                ```
+                > Q1 <- quantile(concrete$fly_ash, 0.25)
+                > Q3 <- quantile(concrete$fly_ash, 0.75)
+                > IQR <- IQR(concrete$fly_ash)
+                > concrete_quantile <- concrete[concrete$fly_ash >= (Q1 - 1.5*IQR) & concrete$fly_ash <= (Q3 + 1.5*IQR), ]
+                ```
 
-3. 보고서게 R console 창 결과물 그대로 넣지 않기
-- 직접 표로 작성해서 넣는 식으로 변경하기
+3. R console 창 결과물
+- 이전
+        - R console 창 결과물을 보고서에 그대로 copy해서 넣음
+- 이후
+        - 결과물 직접 표로 작성해서 넣는 식으로 변경
+
 
 4. "Residuals vs Fitted" 그래프 
-- 이전 : 수평선 0을 중심으로 큰 변동없이 일정한 폭을 유지하는 것 확인
+- 이전
+        - 수평선 0을 중심으로 큰 변동없이 일정한 폭을 유지하는 것 확인
 - 이후
     - 선형성을 대체로 부합하고 있어보이지만 적합값이 높은 영역에서 선형 가정이 완전히 적절하지 않아보인다.
         - 빨간선이 전반적으로 수평선에 가깝게 진행되지만 적합값이 커질수록 약간의 구부러짐이 관찰된다.
         - 적합값(Fitted Values)이 증가할수록 잔차의 분산이 증가하는 경향이 보인다.
             - 적합값이 높은 범위에서 잔차의 변동성이 확인된다
-    - 
 
+5. 그래프 해석
+- 이전
+        - "관찰값들의 산점도가 예측 회귀 직선과 유사한 선형의 형태를 띄고 있는 것을 확인할 수 있는 것을 보아 예측이 성공적으로 된 것으로 보인다."
+        - 예측 회귀 직선이라고 부른 이유? 예측 회귀 직선이 무엇인지? : 용어에 대한 문제
+        - 관찰값 분포에 대한 자세한 결과 분석 X 과연 성공적이라고 할 수 있는지?
+- 이후
+        - 대부분의 관찰값들이 회귀선 주변에 밀집되어 있으며, 전체적으로 선형성을 보이고 있다. 따라서 데이터의 패턴을 잘 학습하여 예측성능이 양호하다고 볼 수 있다.
+        - 하지만, 관찰값이 커질수록 데이터의 산포도가 퍼지는 것을 보아, 관찰값이 커질수록 예측 오차가 다소 증가하는 경향이 보인다
 
-
+6. 부록
+- 이전 
+        - R code를 정리 없이 붙여놓음
+- 이후
+        - 주석을 활용한 R code 사용, 본문에서는 사용하지 않은 결과물들 포함시키기(ex. 단순 AIC, BIC값 비교)
